@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест по "Мертвым душам"</title>
+    <style>
+/* Основные стили для body */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+    overflow: hidden;
+}
+
+.quiz-container {
+    width: 100%;
+    height: 100vh;
+    text-align: center;
+    position: relative;
+    background-color: #fff;
+    overflow: hidden;
+}
+
+.question, .result-screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #fff;
+    transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+    top: 100%;
+    opacity: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.question.active, .result-screen.active {
+    transform: translateY(-100%);
+    opacity: 1;
+}
+
+.question.leave, .result-screen.leave {
+    transform: translateY(-200%);
+    opacity: 0;
+}
+
+.question h2, .result-screen h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    text-align: center;
+}
+
+.question label {
+    display: block;
+    margin: 15px 0;
+    padding: 15px;
+    background-color: #007BFF;
+    color: #fff;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: background-color 0.3s, transform 0.3s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transform: scale(1);
+    width: 300px;
+    text-align: center;
+}
+
+.question label.correct {
+    background-color: #28a745 !important;
+}
+
+.question label.incorrect {
+    background-color: #dc3545 !important;
+}
+
+.question label:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.question input[type="radio"] {
+    display: none;
+}
+
+.question input[type="radio"]:checked + label {
+    transform: scale(1.05);
+}
+
+.counter {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    font-weight: bold;
+    color: #007BFF;
+    background-color: #fff;
+    padding: 10px 20px;
+    border-radius: 25px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.result-screen {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.result-screen.active {
+    display: flex;
+    opacity: 1;
+}
+
+/* Общие стили для картинок */
+.question img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Уменьшение изображений для вопросов 2, 3 и 10 */
+.question[data-question="2"] img,
+.question[data-question="3"] img,
+.question[data-question="10"] img {
+    max-width: 100%; /* Максимальная ширина — 100% от родительского контейнера */
+    max-height: 300px; /* Максимальная высота — 300px */
+    width: auto; /* Сохраняем пропорции */
+    height: auto; /* Сохраняем пропорции */
+}
+
+/* Ограничение максимальной высоты для изображений в определенных вопросах */
+.question[data-question="1"] img,
+.question[data-question="4"] img,
+.question[data-question="5"] img,
+.question[data-question="6"] img,
+.question[data-question="7"] img,
+.question[data-question="8"] img {
+    max-height: 250px;
+}
+
+@media (max-width: 768px) {
+    .question[data-question="1"] img,
+    .question[data-question="4"] img,
+    .question[data-question="5"] img,
+    .question[data-question="6"] img,
+    .question[data-question="7"] img,
+    .question[data-question="8"] img {
+        max-height: 200px; /* Уменьшаем высоту для экранов меньше 768px */
+    }
+}
+
+@media (max-width: 600px) {
+    .question[data-question="1"] img,
+    .question[data-question="4"] img,
+    .question[data-question="5"] img,
+    .question[data-question="6"] img,
+    .question[data-question="7"] img,
+    .question[data-question="8"] img {
+        max-height: 150px; /* Уменьшаем высоту для экранов меньше 600px */
+    }
+
+    .question label {
+        width: 90%;
+        font-size: 16px;
+    }
+
+    .question h2, .result-screen h2 {
+        font-size: 20px;
+    }
+
+    .counter {
+        font-size: 16px;
+        padding: 8px 16px;
+    }
+
+    /* Адаптивные стили для картинок на мобильных устройствах */
+    .question img {
+        width: 80%;
+        height: auto;
+    }
+
+    .result-screen img {
+        width: 80%;
+        height: auto;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <!-- Счетчик вопросов -->
+        <div class="counter" id="counter">Вопрос 1 из 10</div>
+
+        <!-- Вопрос 1 -->
+        <div class="question active" data-question="1">
+            <h2>1. Как зовут главного героя "Мертвых душ"?</h2>
+            <img src="https://i.ibb.co/xqjX9Yv2/orig-1.jpg" alt="Иллюстрация к вопросу 1">
+            <label><input type="radio" name="q1" value="a"> a) Павел Чичиков</label>
+            <label><input type="radio" name="q1" value="b"> b) Иван Хлестаков</label>
+            <label><input type="radio" name="q1" value="c"> c) Степан Плюшкин</label>
+            <label><input type="radio" name="q1" value="d"> d) Манилов</label>
+        </div>
+
+        <!-- Вопрос 2 -->
+        <div class="question" data-question="2">
+            <h2>2. Какой титул был у Чичикова?</h2>
+            <img src="https://i.ibb.co/mFT2wwYV/46eff6ed7497ffa59c600535beb7317823.jpg" alt="Иллюстрация к вопросу 2">
+            <label><input type="radio" name="q2" value="a"> a) Коллежский советник</label>
+            <label><input type="radio" name="q2" value="b"> b) Титулярный советник</label>
+            <label><input type="radio" name="q2" value="c"> c) Надворный советник</label>
+            <label><input type="radio" name="q2" value="d"> d) Статский советник</label>
+        </div>
+
+        <!-- Вопрос 3 -->
+        <div class="question" data-question="3">
+            <h2>3. Какой город стал центром действий "Мертвых душ"?</h2>
+            <img src="https://i.ibb.co/DgpnrbPg/i-8.webp" alt="Иллюстрация к вопросу 3">
+            <label><input type="radio" name="q3" value="a"> a) Москва</label>
+            <label><input type="radio" name="q3" value="b"> b) Санкт-Петербург</label>
+            <label><input type="radio" name="q3" value="c"> c) NN</label>
+            <label><input type="radio" name="q3" value="d"> d) Киев</label>
+        </div>
+
+        <!-- Вопрос 4 -->
+        <div class="question" data-question="4">
+            <h2>4. Какой помещик был известен своей мечтательностью?</h2>
+            <img src="https://i.ibb.co/FL7CdD3w/i-11.webp" alt="Иллюстрация к вопросу 4">
+            <label><input type="radio" name="q4" value="a"> a) Манилов</label>
+            <label><input type="radio" name="q4" value="b"> b) Собакевич</label>
+            <label><input type="radio" name="q4" value="c"> c) Плюшкин</label>
+            <label><input type="radio" name="q4" value="d"> d) Ноздрев</label>
+        </div>
+
+        <!-- Вопрос 5 -->
+        <div class="question" data-question="5">
+            <h2>5. Какой персонаж раньше имел прекрасную семью?</h2>
+            <img src="https://i.ibb.co/1tsm2ShR/i-74.webp" alt="Иллюстрация к вопросу 5">
+            <label><input type="radio" name="q5" value="a"> a) Чичиков</label>
+            <label><input type="radio" name="q5" value="b"> b) Собакевич</label>
+            <label><input type="radio" name="q5" value="c"> c) Плюшкин</label>
+            <label><input type="radio" name="q5" value="d"> d) Ноздрев</label>
+        </div>
+
+        <!-- Вопрос 6 -->
+        <div class="question" data-question="6">
+            <h2>6. Какой помещик был известен своей скупостью?</h2>
+            <img src="https://i.ibb.co/RkQCYxH9/i-75.webp" alt="Иллюстрация к вопросу 6">
+            <label><input type="radio" name="q6" value="a"> a) Чичиков</label>
+            <label><input type="radio" name="q6" value="b"> b) Собакевич</label>
+            <label><input type="radio" name="q6" value="c"> c) Коробочка</label>
+            <label><input type="radio" name="q6" value="d"> d) Ноздрев</label>
+        </div>
+
+        <!-- Вопрос 7 -->
+        <div class="question" data-question="7">
+            <h2>7. У кого была привычка наступать на ноги?</h2>
+            <img src="https://i.ibb.co/GfrVJRc4/i-77.webp" alt="Иллюстрация к вопросу 7">
+            <label><input type="radio" name="q7" value="a"> a) Манилов</label>
+            <label><input type="radio" name="q7" value="b"> b) Собакевич</label>
+            <label><input type="radio" name="q7" value="c"> c) Плюшкин</label>
+            <label><input type="radio" name="q7" value="d"> d) Ноздрев</label>
+        </div>
+
+        <!-- Вопрос 8 -->
+        <div class="question" data-question="8">
+            <h2>8. Какой помещик был известен своей любовью к еде?</h2>
+            <img src="https://i.ibb.co/3Yp4zHWG/i-76.webp" alt="Иллюстрация к вопросу 8">
+            <label><input type="radio" name="q8" value="a"> a) Манилов</label>
+            <label><input type="radio" name="q8" value="b"> b) Собакевич</label>
+            <label><input type="radio" name="q8" value="c"> c) Плюшкин</label>
+            <label><input type="radio" name="q8" value="d"> d) Ноздрев</label>
+        </div>
+
+        <!-- Вопрос 9 -->
+        <div class="question" data-question="9">
+            <h2>9. Какой персонаж был известен своей любовью к книгам?</h2>
+            <img src="https://i.ibb.co/qYyZy6VY/scale-1200-1.jpg" alt="Иллюстрация к вопросу 9">
+            <label><input type="radio" name="q9" value="a"> a) Чичиков</label>
+            <label><input type="radio" name="q9" value="b"> b) Собакевич</label>
+            <label><input type="radio" name="q9" value="c"> c) Плюшкин</label>
+            <label><input type="radio" name="q9" value="d"> d) Манилов</label>
+        </div>
+
+        <!-- Вопрос 10 -->
+        <div class="question" data-question="10">
+            <h2>10. Кто умер в 10 главе "Мертвых душ"?</h2>
+            <img src="https://i.ibb.co/Wp5nG47H/i-78-1.webp" alt="Иллюстрация к вопросу 10">
+            <label><input type="radio" name="q10" value="a"> a) Чичиков</label>
+            <label><input type="radio" name="q10" value="b"> b) Прокурор</label>
+            <label><input type="radio" name="q10" value="c"> c) Собакевич</label>
+            <label><input type="radio" name="q10" value="d"> d) Ноздрев</label>
+        </div>
+
+        <!-- Экран результата -->
+        <div class="result-screen">
+            <h2 id="result-text"></h2>
+            <img id="result-image" src="" alt="Результат">
+        </div>
+    </div>
+
+    <script>
+        const questions = document.querySelectorAll('.question');
+        const counter = document.getElementById('counter');
+        const resultScreen = document.querySelector('.result-screen');
+        const resultText = document.getElementById('result-text');
+        const resultImage = document.getElementById('result-image');
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // Правильные ответы
+        const correctAnswers = {
+            q1: "a",
+            q2: "b",
+            q3: "c",
+            q4: "a",
+            q5: "c",
+            q6: "c",
+            q7: "b",
+            q8: "b",
+            q9: "d",
+            q10: "b"
+        };
+
+        // Показываем первый вопрос
+        showQuestion(currentQuestionIndex);
+        updateCounter();
+
+        // Функция для показа вопроса
+        function showQuestion(index) {
+            questions.forEach((question, i) => {
+                const questionNumber = parseInt(question.dataset.question);
+                if (questionNumber === index + 1) {
+                    question.classList.add('active');
+                } else {
+                    question.classList.remove('active');
+                    question.classList.remove('leave');
+                }
+            });
+        }
+
+        // Обработчик выбора ответа
+        questions.forEach(question => {
+            const radios = question.querySelectorAll('input[type="radio"]');
+            radios.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    const questionNumber = parseInt(question.dataset.question);
+
+                    // Сбрасываем стили для всех label текущего вопроса
+                    radios.forEach(r => {
+                        r.parentElement.classList.remove('correct', 'incorrect');
+                    });
+
+                    const isCorrect = this.value === correctAnswers[`q${questionNumber}`];
+
+                    if (isCorrect) {
+                        this.parentElement.classList.add('correct');
+                        score++;
+                    } else {
+                        this.parentElement.classList.add('incorrect');
+                    }
+
+                    // Отключаем все radio buttons в текущем вопросе
+                    radios.forEach(r => r.disabled = true);
+
+                    // Переходим к следующему вопросу
+                    setTimeout(() => {
+                        if (currentQuestionIndex < questions.length - 1) {
+                            currentQuestionIndex++;
+                            updateCounter();
+                            moveQuestion('next');
+                        } else {
+                            showResult();
+                        }
+                    }, 500);
+                });
+            });
+        });
+
+        // Функция для переключения вопросов
+        function moveQuestion(direction) {
+            const currentQuestion = questions[currentQuestionIndex - 1];
+            if (currentQuestion) {
+                currentQuestion.classList.remove('active');
+                currentQuestion.classList.add('leave');
+            }
+
+            const nextQuestion = questions[currentQuestionIndex];
+            if (nextQuestion) {
+                setTimeout(() => {
+                    if (currentQuestion) {
+                        currentQuestion.classList.remove('leave');
+                    }
+                    nextQuestion.classList.add('active');
+                }, 500);
+            }
+        }
+
+        // Функция для обновления счетчика
+        function updateCounter() {
+            counter.textContent = `Вопрос ${currentQuestionIndex + 1} из ${questions.length}`;
+        }
+
+        // Функция для показа результата
+        function showResult() {
+            resultText.textContent = `Вы ответили правильно на ${score} из ${questions.length} вопросов.`;
+            
+            if (score >= 8) {
+                resultImage.src = "https://i.ibb.co/r2fRprQ3/uncaption.gif"
+            } else if (score >= 4) {
+                resultImage.src = "https://i.ibb.co/KcYrtRSB/1676967349-bronk-club-p-rofl-pozdravleniya-pinterest-50.jpg";
+            } else {
+                resultImage.src = "https://i.ibb.co/mFDDGJL5/attachment-1.gif";
+            }
+
+            resultScreen.classList.add('active');
+        }
+    </script>
+</body>
+</html>
